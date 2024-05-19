@@ -1,0 +1,97 @@
+﻿@page "/cita/nueva"
+@page "/cita/editar/{Id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager _navigator;
+@inject IRepositorioCitas _repositorio;
+
+<h3>@_mensaje Cita</h3>
+
+<EditForm Model="_cita" FormName="fmrCita" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="row mb-3">
+        <label for="txtPaciente" class="col-2 col-form-label">Paciente</label>
+        <div class="col-10">
+            <InputSelect for="txtPaciente" class="form-select" @bind-Value="_cita.ClienteId">
+                <option value="0" enable="enable">Seleccione un Cliente...</option>
+                @foreach (Cliente cliente in _pacientes)
+                {
+                    <option value="@cliente.Id">@cliente.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="()=>_cita.TerapeutaId" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtFecha" class="col-2 col-form-label">Fecha</label>
+        <div class="col-10">
+            <InputDate id="txtFecha" class="form-control" @bind-Value="_cita.Fecha" />
+            <ValidationMessage For="()=>_cita.Fecha" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtHora" class="col-2 col-form-label">Fecha</label>
+        <div class="col-10">
+            <InputNumber id="txtHora" class="form-control" @bind-Value="_cita.Hora" />
+            <ValidationMessage For="()=>_cita.Hora" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtTerapeuta" class="col-2 col-form-label">Terapeuta</label>
+        <div class="col-10">
+            <InputSelect for="tstTerapeuta" class="form-select" @bind-Value="_cita.TerapeutaId">
+                <option value="0" enable="enable">Seleccione un Terapeuta...</option>
+                @foreach(Terapeuta terapeuta in _terapeutas)
+                {
+                    <option value="@terapeuta.Id">@terapeuta.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="()=>_cita.TerapeutaId" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button class="btn btn-danger ms-3" @onclick="Cancelar" @onclick:preventDefault>Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private string _mensaje = "";
+    private Cita? _cita = new();
+    private List<Terapeuta> _terapeutas = new();
+    private List<Cliente> _pacientes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pacientes = await _repositorio.GetPacientes();
+        _terapeutas = await _repositorio.GetTerapeutas();
+        if (Id > 0)
+        {
+            _cita = await _repositorio.Get(Id);
+            _mensaje = "Modificar";
+        }
+        else
+        {
+            _mensaje = "Nueva";
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorio.Update(Id, _cita!);
+            _navigator.NavigateTo("/pacientes");
+        }
+        else
+        {
+            await _repositorio.Add(_cita!);
+            _navigator.NavigateTo("/pacientes");
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/pacientes");
+    }
+
+}

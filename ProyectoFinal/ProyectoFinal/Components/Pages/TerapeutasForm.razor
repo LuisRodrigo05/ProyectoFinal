@@ -1,0 +1,83 @@
+﻿@page "/terapeuta/nuevo"
+@page "/terapeuta/editar/{Id:int}"
+@rendermode InteractiveServer
+@inject NavigationManager _navigator;
+@inject IRepositorioTerapeutas _repositorio;
+
+<h2>@_mensaje Terapeuta</h2>
+<EditForm Model="_terapeuta" FormName="fmrPaciente" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="row mb-3">
+        <label for="txtNombre" class="col-2 col-form-label">Nombre</label>
+        <div class="col-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="_terapeuta.Nombre" />
+            <ValidationMessage For="()=>_terapeuta.Nombre" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtCorreo" class="col-2 col-form-label">Correo</label>
+        <div class="col-10">
+            <InputText id="txtCorreo" class="form-control" @bind-Value="_terapeuta.Correo" />
+            <ValidationMessage For="()=>_terapeuta.Correo" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtTelefono" class="col-2 col-form-label">Teléfono</label>
+        <div class="col-10">
+            <InputText id="txtTelefono" class="form-control" @bind-Value="_terapeuta.Telefono" />
+            <ValidationMessage For="()=>_terapeuta.Telefono" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label for="txtEspecialidad" class="col-2 col-form-label">Edad</label>
+        <div class="col-10">
+            <InputSelect for="txtEspecialidad" class="form-select" @bind-Value="_terapeuta.Especialidad">
+                <option value="0" enable="disable">Seleccione una Especialidad...</option>
+                <option value="Psicología" enable="enable">Psicología</option>
+                <option value="Psiquiatría" enable="enable">Psiquiatría</option>
+            </InputSelect>
+            <ValidationMessage For="()=>_terapeuta.Especialidad" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button class="btn btn-danger ms-3" @onclick="Cancelar" @onclick:preventDefault>Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    private string _mensaje = "";
+    private Terapeuta? _terapeuta = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id > 0)
+        {
+            _terapeuta = await _repositorio.Get(Id);
+            _mensaje = "Modificar";
+        }
+        else
+        {
+            _mensaje = "Nueva";
+        }
+    }
+
+    private async void Guardar()
+    {
+        if (Id > 0)
+        {
+            await _repositorio.Update(Id, _terapeuta!);
+            _navigator.NavigateTo("/terapeutas");
+        }
+        else
+        {
+            await _repositorio.Add(_terapeuta!);
+            _navigator.NavigateTo("/terapeutas");
+        }
+    }
+
+    private void Cancelar()
+    {
+        _navigator.NavigateTo("/terapeutas");
+    }
+}
